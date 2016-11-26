@@ -19,19 +19,22 @@ func main() {
 		port = "8080"
 	}
 
-	r := httprouter.New()
-	// r.Handle("/", setHeader(HomeHandler))
-	r.Handler("GET", "/", createHandler(todoHandler))
+	router := httprouter.New()
+
+	router.GET("/todos/:id", createHandler(showHandler))
+	router.GET("/todos", createHandler(indexHandler))
 
 	fmt.Printf("starting server on port %s\n", port)
-	http.ListenAndServe(":"+port, r)
+	http.ListenAndServe(":"+port, router)
 }
 
-// func homeHandler(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
-// 	fmt.Fprintln(rw, "ToDo Home")
-// }
+func showHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	fmt.Println("GET /:id")
+	// fetch todo by id.
+}
 
-func todoHandler(w http.ResponseWriter, r *http.Request) {
-	// fmt.Fprintln(w, "ToDo Home")
+func indexHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	fmt.Println("GET /")
+	// fetch all todos.
 	json.NewEncoder(w).Encode(mockApp.mockItem())
 }
