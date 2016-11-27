@@ -21,7 +21,6 @@ func main() {
 	router := httprouter.New()
 
 	router.GET("/", createHandler(homeHandler))
-
 	router.GET("/todos/:id", createHandler(showHandler))
 	router.GET("/todos", createHandler(indexHandler))
 
