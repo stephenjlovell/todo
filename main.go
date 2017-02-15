@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/rs/cors"
 )
 
 // REST api should respond to the following actions:
@@ -17,26 +16,34 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-
-	router := httprouter.New()
-
-	router.GET("/", createHandler(homeHandler))
-	router.GET("/todos/:id", createHandler(showHandler))
-	router.GET("/todos", createHandler(indexHandler))
-
 	fmt.Printf("starting server on port %s\n", port)
-	http.ListenAndServe(":"+port, router)
+
+	mux := http.NewServeMux()
+	registerHandlers(mux)
+
+	handler := cors.Default().Handler(mux)
+
+	if err := http.ListenAndServe(":"+port, handler); err != nil {
+		panic(err)
+	}
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	fmt.Fprint(w, "Todo Home")
+func registerHandlers(mux *http.ServeMux) {
+	mux.HandleFunc("/", setHeaders(indexHandler))
+	mux.HandleFunc("/:id", setHeaders(showHandler))
 }
 
-func showHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+func setHeaders(fn http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fn(w, r)
+	}
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("GET /:id") // fetch all todos.
+}
+
+func showHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("GET /:id") // fetch todo by id.
-}
-
-func indexHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	fmt.Println("GET /") // fetch all todos.
-	json.NewEncoder(w).Encode(mockApp.mockItem())
 }
